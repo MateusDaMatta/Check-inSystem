@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Check-in TechWorld</title>
+</head>
+<body>
+    <h1>Check-In TechWorld</h1>
+    <form action="/check_in" method="POST">
+        <input type="text" name="name" placeholder="Enter your name" required>
+        <button type="submit">Check-In</button>
+    </form>
+    {% if message %}
+    <p style="color: red;">{{ message }}</p>
+    {% endif %}
+    <h2>Checked In Funcionarios</h2>
+    <ul>
+        {% for person in persons %}
+        {% if not person[3] %}
+        <li>{{ person[1] }} (Checked-In: {{ person[2] }})</li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+
+    <h2>Check Out</h2>
+    <form action="/check_out" method="POST">
+        <input type="text" name="name" placeholder="Enter your name" required>
+        <button type="submit">Check-Out</button>
+    </form>
+    {% if warn_chkout_msg %}
+    <p style="color: red;">{{ warn_chkout_msg }}</p>
+    {% endif %}
+
+    <h2>Full working hours</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>id</th>
+                <th>Check in</th>
+                <th>Check out</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for person in persons %}
+            <tr>
+                <td>{{ person[0] }}</td>
+                <td>{{ person[1] }}</td>
+                <td>{{ person[2] }}</td>
+                <td>{{ person[3] or 'Working' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        var message = "{{ message }}"
+        var warn_chkout_msg = "{{ warn_chkout_msg }}"
+    </script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>
