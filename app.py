@@ -13,8 +13,15 @@ def get_db_connection():
     )
     return connection
 
-#mycursor.execute("CREATE DATABASE funcionarios")
-#mycursor.execute("CREATE TABLE person(id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50) NOT NULL, checkedat datetime NOT NULL)")
+#Criar banco de dados
+'''
+def create_database():
+    db = get_db_connection()
+    mycursor = db.cursor()
+    mycursor.execute("CREATE DATABASE funcionarios")
+    mycursor.execute("CREATE TABLE person(id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50) NOT NULL, checkedat datetime NOT NULL, status ENUM('checked_in', 'checked_out') NOT NULL DEFAULT 'checked_out')")
+
+create_database() '''
 
 @app.route('/')
 def index():
@@ -45,13 +52,18 @@ def check_in():
             db.commit()
             message = None
         else:
-            message = "Worker already Checked In."    
+            if person_exists[4] == 'checked_out':
+                mycursor.execute("UPDATE person SET checkedat = %s, status = 'checked_in' WHERE name = %s", (datetime.now(), name))
+                db.commit()
+                message = None
+            else:
+                message = "Funcionário já fez o check-in."    
 
-        mycursor.execute(''' SELECT p.id, p.name, p.checkedat AS checked_in, po.checkedat AS checked_out
-                         FROM person p
-                         LEFT JOIN person_out po ON p.id = po.id ''')
+        mycursor.execute(''' SELECT id,name, checkedat AS checked_in,
+                            (SELECT checkedat FROM person_out WHERE person.id = person_out.id ORDER BY checkedat DESC LIMIT 1) AS checked_out,
+                            status
+                         FROM person ''')
         persons = mycursor.fetchall()
-
 
         mycursor.close()
         db.close()
@@ -85,9 +97,9 @@ def check_out():
                 mycursor.execute("INSERT INTO person_out (id,name,checkedat) SELECT id,name,%s FROM person WHERE name = %s", (datetime.now(), name))
                 db.commit()
             else:
-                warn_chkout_msg = "Person not checked in or already checked out."
+                warn_chkout_msg = "Funcionário não fez o check-in ou já fez o check-out."
         else:
-            warn_chkout_msg = "Person not checked in or already checked out."            
+            warn_chkout_msg = "Funcionário não fez o check-in ou já fez o check-out."            
 
         mycursor.execute(''' SELECT p.id, p.name, p.checkedat AS checked_in, po.checkedat AS checked_out
                              FROM person p
